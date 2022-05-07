@@ -54,9 +54,7 @@ except:
 def pp_zk(handle,root, indent = 0):
     """Pretty print(a zookeeper tree, starting at root)"""
     def make_path(child):
-        if root == "/":
-            return "/" + child
-        return root + "/" + child
+        return f"/{child}" if root == "/" else f"{root}/{child}"
     children = zookeeper.get_children(handle, root, None)
     out = ""
     for i in xrange(indent):

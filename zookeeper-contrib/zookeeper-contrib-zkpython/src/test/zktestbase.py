@@ -32,7 +32,7 @@ class TestBase(unittest.TestCase):
         self.connected = False
         self.handle = -1
         logdir = os.environ.get("ZKPY_LOG_DIR")
-        logfile = os.path.join(logdir, self.__class__.__name__ + ".log")
+        logfile = os.path.join(logdir, f"{self.__class__.__name__}.log")
         try:
             f = open(logfile,"w")
             zookeeper.set_log_stream(f)
@@ -98,7 +98,4 @@ class TestBase(unittest.TestCase):
             zookeeper.close(self.handle)
 
     def all(self, iterable):
-        for element in iterable:
-            if not element:
-                return False
-        return True
+        return all(iterable)

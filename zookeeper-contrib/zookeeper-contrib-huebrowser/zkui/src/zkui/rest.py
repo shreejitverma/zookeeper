@@ -62,14 +62,14 @@ class ZooKeeper(object):
     def close_session(self):
         """ Close the session on the server """
         if self._session is not None:
-            url = '%s/sessions/v1/%s' % (self._base, self._session)
+            url = f'{self._base}/sessions/v1/{self._session}'
             self._do_delete(url)
             self._session = None
 
     def heartbeat(self):
         """ Send a heartbeat request. This is needed in order to keep a session alive """
         if self._session is not None:
-            url = '%s/sessions/v1/%s' % (self._base, self._session)
+            url = f'{self._base}/sessions/v1/{self._session}'
             self._do_put(url, '')
 
     @contextmanager
@@ -80,7 +80,7 @@ class ZooKeeper(object):
 
     def get(self, path):
         """ Get a node """
-        url = "%s/znodes/v1%s" % (self._base, path)
+        url = f"{self._base}/znodes/v1{path}"
         return self._do_get(url)
 
     def get_children(self, path):
@@ -93,11 +93,12 @@ class ZooKeeper(object):
 
     def get_children_paths(self, path, uris=False):
         """ Get the paths for children nodes """
-        url = "%s/znodes/v1%s?view=children" % (self._base, path)
+        url = f"{self._base}/znodes/v1{path}?view=children"
         resp = self._do_get(url)
         for child in resp.get('children', []):
-            yield child if not uris else resp['child_uri_template']\
-              .replace('{child}', urllib2.quote(child))
+            yield resp['child_uri_template'].replace(
+                '{child}', urllib2.quote(child)
+            ) if uris else child
        
     def create(self, path, data=None, sequence=False, ephemeral=False):
         """ Create a new node. By default this call creates a persistent znode.
@@ -157,7 +158,7 @@ class ZooKeeper(object):
     def recursive_delete(self, path):
         """ Delete all the nodes from the tree """
         for child in self.get_children_paths(path):
-            fp = ("%s/%s" % (path, child)).replace('//', '/')
+            fp = f"{path}/{child}".replace('//', '/')
             self.recursive_delete(fp)
         self.delete(path)
 

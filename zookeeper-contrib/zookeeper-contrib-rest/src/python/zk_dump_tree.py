@@ -68,7 +68,7 @@ def zk_dump_tree(url, root):
     Arguments:
     - `root`:
     """
-    dump_node(url + '/znodes/v1' + root, 0)
+    dump_node(f'{url}/znodes/v1{root}', 0)
 
 def usage():
     """Usage

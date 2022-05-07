@@ -24,10 +24,7 @@ from zkui.utils import get_cluster_or_404
 from zkui.forms import CreateZNodeForm, EditZNodeForm
 
 def _get_global_overview():
-  overview = []
-  for c in settings.CLUSTERS:
-    overview.append(_get_overview(c))
-  return overview
+  return [_get_overview(c) for c in settings.CLUSTERS]
 
 def _get_overview(cluster):
   stats = {}
@@ -109,8 +106,7 @@ def create(request, id, path):
     if form.is_valid():
       zk = ZooKeeper(cluster['rest_gateway'])
 
-      full_path = ("%s/%s" % (path, form.cleaned_data['name']))\
-        .replace('//', '/')
+      full_path = f"{path}/{form.cleaned_data['name']}".replace('//', '/')
 
       zk.create(full_path, \
         form.cleaned_data['data'], \

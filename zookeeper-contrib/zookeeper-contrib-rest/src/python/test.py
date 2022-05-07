@@ -45,8 +45,10 @@ class ZooKeeperREST_TestCase(unittest.TestCase):
         assert self.zk.exists('/zookeeper') is True
 
     def test_get_children(self):
-        assert any([child['path'] == '/zookeeper/quota' \
-            for child in self.zk.get_children('/zookeeper')])
+        assert any(
+            child['path'] == '/zookeeper/quota'
+            for child in self.zk.get_children('/zookeeper')
+        )
             
     def test_create_znode(self):
         try:

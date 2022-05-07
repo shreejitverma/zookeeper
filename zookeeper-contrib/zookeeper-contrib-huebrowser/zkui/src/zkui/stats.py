@@ -24,16 +24,15 @@ class Session(object):
   class BrokenLine(Exception): pass
 
   def __init__(self, session):
-    m = re.search('/(\d+\.\d+\.\d+\.\d+):(\d+)\[(\d+)\]\((.*)\)', session)
-    if m:
-        self.host = m.group(1)
-        self.port = m.group(2)
-        self.interest_ops = m.group(3)
-        for d in m.group(4).split(","):
-            k,v = d.split("=")
-            self.__dict__[k] = v
+    if m := re.search('/(\d+\.\d+\.\d+\.\d+):(\d+)\[(\d+)\]\((.*)\)', session):
+      self.host = m[1]
+      self.port = m[2]
+      self.interest_ops = m[3]
+      for d in m[4].split(","):
+        k,v = d.split("=")
+        self.__dict__[k] = v
     else:
-        raise Session.BrokenLine() 
+      raise Session.BrokenLine() 
 
 class ZooKeeperStats(object):
 
@@ -42,13 +41,11 @@ class ZooKeeperStats(object):
         self._timeout = timeout
 
     def get_stats(self):
-        """ Get ZooKeeper server stats as a map """
-        data = self._send_cmd('mntr')
-        if data:
-            return self._parse(data)
-        else:
-            data = self._send_cmd('stat')
-            return self._parse_stat(data)
+      """ Get ZooKeeper server stats as a map """
+      if data := self._send_cmd('mntr'):
+        return self._parse(data)
+      data = self._send_cmd('stat')
+      return self._parse_stat(data)
 
     def get_clients(self):
       """ Get ZooKeeper server clients """
@@ -105,66 +102,65 @@ class ZooKeeperStats(object):
         return result
 
     def _parse_stat(self, data):
-        """ Parse the output from the 'stat' 4letter word command """
-        h = StringIO(data)
+      """ Parse the output from the 'stat' 4letter word command """
+      h = StringIO(data)
 
-        result = {}
-        
-        version = h.readline()
-        if version:
-            result['zk_version'] = version[version.index(':')+1:].strip()
+      result = {}
 
-        # skip all lines until we find the empty one
-        while h.readline().strip(): pass
+      if version := h.readline():
+        result['zk_version'] = version[version.index(':')+1:].strip()
 
-        for line in h.readlines():
-            m = re.match('Latency min/avg/max: (\d+)/(\d+)/(\d+)', line)
-            if m is not None:
-                result['zk_min_latency'] = int(m.group(1))
-                result['zk_avg_latency'] = int(m.group(2))
-                result['zk_max_latency'] = int(m.group(3))
-                continue
+      # skip all lines until we find the empty one
+      while h.readline().strip(): pass
 
-            m = re.match('Received: (\d+)', line)
-            if m is not None:
-                result['zk_packets_received'] = int(m.group(1))
-                continue
+      for line in h.readlines():
+        m = re.match('Latency min/avg/max: (\d+)/(\d+)/(\d+)', line)
+        if m is not None:
+          result['zk_min_latency'] = int(m[1])
+          result['zk_avg_latency'] = int(m[2])
+          result['zk_max_latency'] = int(m[3])
+          continue
 
-            m = re.match('Sent: (\d+)', line)
-            if m is not None:
-                result['zk_packets_sent'] = int(m.group(1))
-                continue
+        m = re.match('Received: (\d+)', line)
+        if m is not None:
+          result['zk_packets_received'] = int(m[1])
+          continue
 
-            m = re.match('Outstanding: (\d+)', line)
-            if m is not None:
-                result['zk_outstanding_requests'] = int(m.group(1))
-                continue
+        m = re.match('Sent: (\d+)', line)
+        if m is not None:
+          result['zk_packets_sent'] = int(m[1])
+          continue
 
-            m = re.match('Mode: (.*)', line)
-            if m is not None:
-                result['zk_server_state'] = m.group(1)
-                continue
+        m = re.match('Outstanding: (\d+)', line)
+        if m is not None:
+          result['zk_outstanding_requests'] = int(m[1])
+          continue
 
-            m = re.match('Node count: (\d+)', line)
-            if m is not None:
-                result['zk_znode_count'] = int(m.group(1))
-                continue
+        m = re.match('Mode: (.*)', line)
+        if m is not None:
+          result['zk_server_state'] = m[1]
+          continue
 
-        return result 
+        m = re.match('Node count: (\d+)', line)
+        if m is not None:
+          result['zk_znode_count'] = int(m[1])
+          continue
+
+      return result 
 
     def _parse_line(self, line):
-        try:
-            key, value = map(str.strip, line.split('\t'))
-        except ValueError:
-            raise ValueError('Found invalid line: %s' % line)
+      try:
+        key, value = map(str.strip, line.split('\t'))
+      except ValueError:
+        raise ValueError(f'Found invalid line: {line}')
 
-        if not key:
-            raise ValueError('The key is mandatory and should not be empty')
+      if not key:
+          raise ValueError('The key is mandatory and should not be empty')
 
-        try:
-            value = int(value)
-        except (TypeError, ValueError):
-            pass
+      try:
+          value = int(value)
+      except (TypeError, ValueError):
+          pass
 
-        return key, value
+      return key, value
 

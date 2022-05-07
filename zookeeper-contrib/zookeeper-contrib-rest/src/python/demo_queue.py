@@ -37,7 +37,7 @@ class Queue(object):
         self.zk = zk
 
     def put(self, data):
-        self.zk.create("%s/el-" % self.root, str(data), sequence=True, ephemeral=True)
+        self.zk.create(f"{self.root}/el-", str(data), sequence=True, ephemeral=True)
 
         # creating ephemeral nodes for easy cleanup
         # in a real world scenario you should create
@@ -58,11 +58,7 @@ class Queue(object):
         try:
             first = children[0]
             self.zk.delete(first['path'], version=first['version'])
-            if 'data64' not in first:
-                return ''
-            else:
-                return first['data64'].decode('base64')
-
+            return '' if 'data64' not in first else first['data64'].decode('base64')
         except (ZooKeeper.WrongVersion, ZooKeeper.NotFound):
             # someone changed the znode between the get and delete
             # this should not happen

@@ -146,18 +146,18 @@ class MyClass(threading.Thread):
 
     Does not provide a return value.
     """
-    out = ['Running watcher:',
-           'zh=%d' % zh,
-           'event=%d' % event,
-           'state=%d' % state,
-           'path=%s' % path]
+    out = [
+        'Running watcher:',
+        'zh=%d' % zh,
+        'event=%d' % event,
+        'state=%d' % state,
+        f'path={path}',
+    ]
     logger.debug(' '.join(out))
-    if event == zookeeper.CHANGED_EVENT and \
-       state == zookeeper.CONNECTED_STATE and \
-       self.znode == path:
-      if zookeeper.OK != self.aget():
-        logger.critical('Unable to get znode! Exiting.')
-        sys.exit(1)
+    if (event == zookeeper.CHANGED_EVENT and state == zookeeper.CONNECTED_STATE
+        and self.znode == path and zookeeper.OK != self.aget()):
+      logger.critical('Unable to get znode! Exiting.')
+      sys.exit(1)
 
   def run(self):
     while True:
@@ -191,7 +191,7 @@ def main(argv=None):
   stream_handler.setFormatter(formatter)
   logger.addHandler(stream_handler)
 
-  logger.info('Starting Zookeeper python example: %s' % ' '.join(sys.argv))
+  logger.info(f"Starting Zookeeper python example: {' '.join(sys.argv)}")
 
   mc = MyClass(options, args)
   mc.start()

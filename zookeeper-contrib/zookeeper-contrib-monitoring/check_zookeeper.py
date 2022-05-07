@@ -170,15 +170,14 @@ class ZooKeeperServer(object):
         """ Get ZooKeeper server stats as a map """
         data = self._send_cmd('mntr')
         stat = self._parse_stat(self._send_cmd('stat'))
-        if data:
-            mntr = self._parse(data)
-            missing = ['zk_zxid', 'zk_zxid_counter', 'zk_zxid_epoch']
-            for m in missing:
-                if m in stat:
-                    mntr[m] = stat[m]
-            return mntr
-        else:
+        if not data:
             return stat
+        mntr = self._parse(data)
+        missing = ['zk_zxid', 'zk_zxid_counter', 'zk_zxid_epoch']
+        for m in missing:
+            if m in stat:
+                mntr[m] = stat[m]
+        return mntr
 
     def _create_socket(self):
         return socket.socket()
@@ -215,9 +214,8 @@ class ZooKeeperServer(object):
         h = StringIO(data)
 
         result = {}
-        
-        version = h.readline()
-        if version:
+
+        if version := h.readline():
             result['zk_version'] = version[version.index(':')+1:].strip()
 
         # skip all lines until we find the empty one
@@ -226,78 +224,78 @@ class ZooKeeperServer(object):
         for line in h.readlines():
             m = re.match('Latency min/avg/max: (\d+)/(\d+)/(\d+)', line)
             if m is not None:
-                result['zk_min_latency'] = int(m.group(1))
-                result['zk_avg_latency'] = int(m.group(2))
-                result['zk_max_latency'] = int(m.group(3))
+                result['zk_min_latency'] = int(m[1])
+                result['zk_avg_latency'] = int(m[2])
+                result['zk_max_latency'] = int(m[3])
                 continue
 
             m = re.match('Received: (\d+)', line)
             if m is not None:
-                result['zk_packets_received'] = int(m.group(1))
+                result['zk_packets_received'] = int(m[1])
                 continue
 
             m = re.match('Sent: (\d+)', line)
             if m is not None:
-                result['zk_packets_sent'] = int(m.group(1))
+                result['zk_packets_sent'] = int(m[1])
                 continue
 
             m = re.match('Alive connections: (\d+)', line)
             if m is not None:
-                result['zk_num_alive_connections'] = int(m.group(1))
+                result['zk_num_alive_connections'] = int(m[1])
                 continue
 
             m = re.match('Outstanding: (\d+)', line)
             if m is not None:
-                result['zk_outstanding_requests'] = int(m.group(1))
+                result['zk_outstanding_requests'] = int(m[1])
                 continue
 
             m = re.match('Mode: (.*)', line)
             if m is not None:
-                result['zk_server_state'] = m.group(1)
+                result['zk_server_state'] = m[1]
                 continue
 
             m = re.match('Node count: (\d+)', line)
             if m is not None:
-                result['zk_znode_count'] = int(m.group(1))
+                result['zk_znode_count'] = int(m[1])
                 continue
 
             m = re.match('Watch count: (\d+)', line)
             if m is not None:
-                result['zk_watch_count'] = int(m.group(1))
+                result['zk_watch_count'] = int(m[1])
                 continue
 
             m = re.match('Ephemerals count: (\d+)', line)
             if m is not None:
-                result['zk_ephemerals_count'] = int(m.group(1))
+                result['zk_ephemerals_count'] = int(m[1])
                 continue
 
             m = re.match('Approximate data size: (\d+)', line)
             if m is not None:
-                result['zk_approximate_data_size'] = int(m.group(1))
+                result['zk_approximate_data_size'] = int(m[1])
                 continue
 
             m = re.match('Open file descriptor count: (\d+)', line)
             if m is not None:
-                result['zk_open_file_descriptor_count'] = int(m.group(1))
+                result['zk_open_file_descriptor_count'] = int(m[1])
                 continue
 
             m = re.match('Max file descriptor count: (\d+)', line)
             if m is not None:
-                result['zk_max_file_descriptor_count'] = int(m.group(1))
+                result['zk_max_file_descriptor_count'] = int(m[1])
                 continue
 
             m = re.match('Zxid: (0x[0-9a-fA-F]+)', line)
             if m is not None:
-                result['zk_zxid']         = m.group(1)
-                result['zk_zxid_counter'] = int(m.group(1), 16) & int('0xffffffff', 16) # lower 32 bits
-                result['zk_zxid_epoch']   = int(m.group(1), 16) >>32 # high 32 bits
+                result['zk_zxid'] = m[1]
+                result['zk_zxid_counter'] = int(m[1], 16) & int('0xffffffff', 16)
+                result['zk_zxid_epoch'] = int(m[1], 16) >> 32
                 continue
 
             m = re.match('Proposal sizes last/min/max: (\d+)/(\d+)/(\d+)', line)
             if m is not None:
-                result['zk_last_proposal_size'] = int(m.group(1))
-                result['zk_min_proposal_size'] = int(m.group(2))
-                result['zk_max_proposal_size'] = int(m.group(3))
+                result['zk_last_proposal_size'] = int(m[1])
+                result['zk_min_proposal_size'] = int(m[2])
+                result['zk_max_proposal_size'] = int(m[3])
                 continue
 
         return result
@@ -306,7 +304,7 @@ class ZooKeeperServer(object):
         try:
             key, value = map(str.strip, line.split('\t'))
         except ValueError:
-            raise ValueError('Found invalid line: %s' % line)
+            raise ValueError(f'Found invalid line: {line}')
 
         if not key:
             raise ValueError('The key is mandatory and should not be empty')
@@ -330,7 +328,7 @@ def main():
 
     handler = create_handler(opts.output)
     if handler is None:
-        log.error('undefined handler: %s' % opts.output)
+        log.error(f'undefined handler: {opts.output}')
         sys.exit(1)
 
     return handler.analyze(opts, cluster_stats)
@@ -338,7 +336,7 @@ def main():
 def create_handler(name):
     """ Return an instance of a platform specific analyzer """
     try:
-        return globals()['%sHandler' % name.capitalize()]()
+        return globals()[f'{name.capitalize()}Handler']()
     except KeyError:
         return None
 

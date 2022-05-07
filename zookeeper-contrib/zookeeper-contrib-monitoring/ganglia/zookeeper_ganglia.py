@@ -51,8 +51,7 @@ class ZooKeeperServer(object):
           'time' : time.time(),
           'data' : {}
         }
-        data = self._send_cmd('mntr')
-        if data:
+        if data := self._send_cmd('mntr'):
             parsed_data =  self._parse(data)
         else:
             data = self._send_cmd('stat')
@@ -99,8 +98,7 @@ class ZooKeeperServer(object):
 
         result = {}
 
-        version = h.readline()
-        if version:
+        if version := h.readline():
             result['zk_version'] = version[version.index(':')+1:].strip()
 
         # skip all lines until we find the empty one
@@ -109,27 +107,27 @@ class ZooKeeperServer(object):
         for line in h.readlines():
             m = re.match('Latency min/avg/max: (\d+)/(\d+)/(\d+)', line)
             if m is not None:
-                result['zk_min_latency'] = int(m.group(1))
-                result['zk_avg_latency'] = int(m.group(2))
-                result['zk_max_latency'] = int(m.group(3))
+                result['zk_min_latency'] = int(m[1])
+                result['zk_avg_latency'] = int(m[2])
+                result['zk_max_latency'] = int(m[3])
                 continue
 
             m = re.match('Received: (\d+)', line)
             if m is not None:
-                cur_packets = int(m.group(1))
+                cur_packets = int(m[1])
                 packet_delta = cur_packets - ZK_LAST_METRICS['data'].get('zk_packets_received_total', cur_packets)
                 time_delta = ZK_METRICS['time'] - ZK_LAST_METRICS['time']
                 time_delta = 10.0
                 try:
                     result['zk_packets_received_total'] = cur_packets
-                    result['zk_packets_received'] = packet_delta / float(time_delta)
+                    result['zk_packets_received'] = packet_delta / time_delta
                 except ZeroDivisionError:
                     result['zk_packets_received'] = 0
                 continue
 
             m = re.match('Sent: (\d+)', line)
             if m is not None:
-                cur_packets = int(m.group(1))
+                cur_packets = int(m[1])
                 packet_delta = cur_packets - ZK_LAST_METRICS['data'].get('zk_packets_sent_total', cur_packets)
                 time_delta = ZK_METRICS['time'] - ZK_LAST_METRICS['time']
                 try:
@@ -141,17 +139,17 @@ class ZooKeeperServer(object):
 
             m = re.match('Outstanding: (\d+)', line)
             if m is not None:
-                result['zk_outstanding_requests'] = int(m.group(1))
+                result['zk_outstanding_requests'] = int(m[1])
                 continue
 
             m = re.match('Mode: (.*)', line)
             if m is not None:
-                result['zk_server_state'] = m.group(1)
+                result['zk_server_state'] = m[1]
                 continue
 
             m = re.match('Node count: (\d+)', line)
             if m is not None:
-                result['zk_znode_count'] = int(m.group(1))
+                result['zk_znode_count'] = int(m[1])
                 continue
 
         return result
@@ -160,7 +158,7 @@ class ZooKeeperServer(object):
         try:
             key, value = map(str.strip, line.split('\t'))
         except ValueError:
-            raise ValueError('Found invalid line: %s' % line)
+            raise ValueError(f'Found invalid line: {line}')
 
         if not key:
             raise ValueError('The key is mandatory and should not be empty')
@@ -231,7 +229,7 @@ def metric_init(params=None):
             'format': '%d',
             'groups': 'zookeeper',
         }
-        descriptor.update(updates)
+        descriptor |= updates
         metric_handler.descriptors[name] = descriptor
 
     return metric_handler.descriptors.values()

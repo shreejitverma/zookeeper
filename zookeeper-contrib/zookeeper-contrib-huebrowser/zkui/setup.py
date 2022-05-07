@@ -20,8 +20,7 @@ def expand_package_data(src_dirs, strip=""):
   ret = []
   for src_dir in src_dirs:
     for path, dnames, fnames in os.walk(src_dir):
-      for fname in fnames:
-        ret.append(os.path.join(path, fname).replace(strip, ""))
+      ret.extend(os.path.join(path, fname).replace(strip, "") for fname in fnames)
   return ret
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))

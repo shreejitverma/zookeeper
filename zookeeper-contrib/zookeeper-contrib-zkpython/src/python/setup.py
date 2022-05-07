@@ -26,18 +26,24 @@ zookeeper_macros = [("THREADED", None)]
 if not os.environ.get("ZKPYTHON_NO_SSL"):
     zookeeper_macros.append(("HAVE_OPENSSL_H", True))
 
-zookeepermodule = Extension("zookeeper",
-                            sources=["src/c/zookeeper.c"],
-                            define_macros=zookeeper_macros,
-                            include_dirs=[zookeeper_basedir + "/zookeeper-client/zookeeper-client-c/include",
-                                          zookeeper_basedir + "/zookeeper-client/zookeeper-client-c/target/c",
-                                          zookeeper_basedir + "/zookeeper-client/zookeeper-client-c/generated"],
-                            libraries=["zookeeper_mt"],
-                            library_dirs=[zookeeper_basedir + "/zookeeper-client/zookeeper-client-c/.libs/",
-                                          zookeeper_basedir + "/zookeeper-client/zookeeper-client-c/target/c/.libs/",
-                                          zookeeper_basedir + "/build/test/test-cppunit/.libs",
-                                          "/usr/local/lib"
-                                          ])
+zookeepermodule = Extension(
+    "zookeeper",
+    sources=["src/c/zookeeper.c"],
+    define_macros=zookeeper_macros,
+    include_dirs=[
+        f"{zookeeper_basedir}/zookeeper-client/zookeeper-client-c/include",
+        f"{zookeeper_basedir}/zookeeper-client/zookeeper-client-c/target/c",
+        f"{zookeeper_basedir}/zookeeper-client/zookeeper-client-c/generated",
+    ],
+    libraries=["zookeeper_mt"],
+    library_dirs=[
+        f"{zookeeper_basedir}/zookeeper-client/zookeeper-client-c/.libs/",
+        f"{zookeeper_basedir}/zookeeper-client/zookeeper-client-c/target/c/.libs/",
+        f"{zookeeper_basedir}/build/test/test-cppunit/.libs",
+        "/usr/local/lib",
+    ],
+)
+
 
 setup( name="ZooKeeper",
        version = "0.4",

@@ -83,10 +83,7 @@ class ZK33xSocketMock(SocketMock):
         self.got_stat_cmd = False
 
     def recv(self, size):
-        if 'stat' in self.sent:
-            return ZK_STAT_OUTPUT[:size]
-        else:
-            return ''
+        return ZK_STAT_OUTPUT[:size] if 'stat' in self.sent else ''
 
 class UnableToConnectSocketMock(SocketMock):
     def connect(self, _):

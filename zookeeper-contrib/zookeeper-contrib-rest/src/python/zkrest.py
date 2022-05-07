@@ -62,14 +62,14 @@ class ZooKeeper(object):
     def close_session(self):
         """ Close the session on the server """
         if self._session is not None:
-            url = '%s/sessions/v1/%s' % (self._base, self._session)
+            url = f'{self._base}/sessions/v1/{self._session}'
             self._do_delete(url)
             self._session = None
 
     def heartbeat(self):
         """ Send a heartbeat request. This is needed in order to keep a session alive """
         if self._session is not None:
-            url = '%s/sessions/v1/%s' % (self._base, self._session)
+            url = f'{self._base}/sessions/v1/{self._session}'
             self._do_put(url, '')
 
     @contextmanager
@@ -80,12 +80,12 @@ class ZooKeeper(object):
 
     def get(self, path):
         """ Get a node """
-        url = "%s/znodes/v1%s" % (self._base, path)
+        url = f"{self._base}/znodes/v1{path}"
         return self._do_get(url)
 
     def get_children(self, path):
         """ Get all the children for a given path. This function creates a generator """
-        url = "%s/znodes/v1%s?view=children" % (self._base, path)
+        url = f"{self._base}/znodes/v1{path}?view=children"
         resp = self._do_get(url)
         for child in resp.get('children', []):
             try:

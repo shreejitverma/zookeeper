@@ -40,8 +40,8 @@ PUBLIC_ANNOTATIONS = ["org.apache.yetus.audience.InterfaceAudience.LimitedPrivat
 
 # Various relative paths
 PATH_TO_REPO_DIR = "../../../../"
-PATH_TO_BUILD_DIR = PATH_TO_REPO_DIR + "build/compat-check"
-PATH_TO_JACC_DIR = PATH_TO_REPO_DIR + "build/jacc"
+PATH_TO_BUILD_DIR = f"{PATH_TO_REPO_DIR}build/compat-check"
+PATH_TO_JACC_DIR = f"{PATH_TO_REPO_DIR}build/jacc"
 
 def check_output(*popenargs, **kwargs):
     # r"""Run command with arguments and return its output as a byte string.
@@ -51,8 +51,7 @@ def check_output(*popenargs, **kwargs):
     # """
     process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
     output, unused_err = process.communicate()
-    retcode = process.poll()
-    if retcode:
+    if retcode := process.poll():
         cmd = kwargs.get("args")
         if cmd is None:
             cmd = popenargs[0]
@@ -196,8 +195,7 @@ def main(argv):
     build_tree(src_dir)
     build_tree(dst_dir)
 
-    run_java_acc(src_rev, src_dir + "/build",
-                 dst_rev, dst_dir + "/build")
+    run_java_acc(src_rev, f"{src_dir}/build", dst_rev, f"{dst_dir}/build")
 
 
 if __name__ == "__main__":
